@@ -13,7 +13,7 @@
   
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7); 
  
-// DEFINIÇAO DE DESENHOS PARA O LCD
+// DEFINIÇAO DE NOVOS CARACTERES PARA O LCD
 byte TijoloRPM[8] = 
 {
   B00000,  
@@ -65,9 +65,9 @@ byte Grau[8] =
  #define LED_Nivel_Bateria_Vermelho    22
  #define LED_Nivel_Bateria_Amarelo     23
  #define LED_Nivel_Bateria_Verde       24
- #define LED_Temp_Bateria_Vermelho     40
+ #define LED_Temp_Bateria_Vermelho     42
  #define LED_Temp_Bateria_Amarelo      41
- #define LED_Temp_Bateria_Verde        42
+ #define LED_Temp_Bateria_Verde        40
  #define LED_Temp_Controlador_Vermelho 44
  #define LED_Temp_Controlador_Amarelo  45
  #define LED_Temp_Controlador_Verde    43
@@ -139,26 +139,37 @@ void setup()
   
 void loop()  
 {  
+   lcd.clear();
    lcd.setCursor(8,1);  
    lcd.write(2);
    lcd.display();
+   
    F_Velocidade();
    F_RPM();
+   lcd.setCursor(9,1); 
+   lcd.print(Temperatura_Motor);
+   lcd.setCursor(12,1);
+   lcd.write(3);
+   lcd.print('C');
    
 /********************************TEMPERATURA DO MOTOR*************************************/   
     Serial.print("Temperatura_Motor: ");
     while(Serial.read()<0) Temperatura_Motor = Serial.parseInt();
     Serial.println(Temperatura_Motor);
     
-    if(Temperatura_Motor > 98){
+    if(Temperatura_Motor > 96){
         digitalWrite(LED_Temp_Motor, HIGH);
      }
     else{
       digitalWrite(LED_Temp_Motor, LOW);
     }
      
-    //Espaço da Temperatura
-     lcd.setCursor(9,1); 
+    if(Temperatura_Motor > 99)lcd.setCursor(9,1); 
+    else {
+      lcd.setCursor(9,1);
+      lcd.print(' ');
+      lcd.setCursor(10,1);  
+    }
      lcd.print(Temperatura_Motor);
      lcd.setCursor(12,1);
      lcd.write(3);
@@ -168,15 +179,20 @@ void loop()
     Serial.print("Pressao_Pneus: ");
     while(Serial.read()<0) Pressao_Pneus = Serial.parseInt();
     Serial.println(Pressao_Pneus);
-    if(Pressao_Pneus > 98){
-        digitalWrite(LED_Pneu_Amarelo, HIGH);
+    if(Pressao_Pneus == 32){
+        digitalWrite(LED_Pneu_Amarelo, LOW);
         digitalWrite(LED_Pneu_Vermelho, LOW);
-        digitalWrite(LED_Pneu_Verde, LOW);
+        digitalWrite(LED_Pneu_Verde, HIGH);
      }
-    else{
-      digitalWrite(LED_Pneu_Verde, HIGH);
-      digitalWrite(LED_Pneu_Amarelo, LOW);
+    else if (Pressao_Pneus < 32 && Pressao_Pneus > 30){
+      digitalWrite(LED_Pneu_Verde, LOW);
+      digitalWrite(LED_Pneu_Amarelo, HIGH);
       digitalWrite(LED_Pneu_Vermelho, LOW);
+    }
+    else{
+      digitalWrite(LED_Pneu_Verde, LOW);
+      digitalWrite(LED_Pneu_Amarelo, LOW);
+      digitalWrite(LED_Pneu_Vermelho, HIGH);
       
     }
 
@@ -189,21 +205,32 @@ void loop()
         digitalWrite(LED_Nivel_Bateria_Vermelho, LOW);
         digitalWrite(LED_Nivel_Bateria_Verde, HIGH);
      }
-    else{
-      digitalWrite(LED_Nivel_Bateria_Verde, HIGH);
-      digitalWrite(LED_Nivel_Bateria_Amarelo, LOW);
+    else if(Nivel_Bateria < 70 && Nivel_Bateria > 30){
+      digitalWrite(LED_Nivel_Bateria_Verde, LOW);
+      digitalWrite(LED_Nivel_Bateria_Amarelo, HIGH);
       digitalWrite(LED_Nivel_Bateria_Vermelho, LOW);
+    }
+    else{
+      digitalWrite(LED_Nivel_Bateria_Verde, LOW);
+      digitalWrite(LED_Nivel_Bateria_Amarelo, LOW);
+      digitalWrite(LED_Nivel_Bateria_Vermelho, HIGH);
       
     } 
 /********************************TEMPERATURA DA BATERIA*************************************/ 
     Serial.print("Temperatura_Bateria: ");
     while(Serial.read()<0) Temperatura_Bateria = Serial.parseInt();
     Serial.println(Temperatura_Bateria);
-    if(Temperatura_Bateria > 98){
-        digitalWrite(LED_Temp_Bateria_Amarelo, HIGH);
-        digitalWrite(LED_Temp_Bateria_Vermelho, LOW);
+    if(Temperatura_Bateria > 65){
+        digitalWrite(LED_Temp_Bateria_Amarelo, LOW);
+        digitalWrite(LED_Temp_Bateria_Vermelho, HIGH);
         digitalWrite(LED_Temp_Bateria_Verde, LOW);
      }
+    else if (Temperatura_Bateria < 65 && Temperatura_Bateria > 60){
+      digitalWrite(LED_Temp_Bateria_Verde, LOW);
+      digitalWrite(LED_Temp_Bateria_Amarelo, HIGH);
+      digitalWrite(LED_Temp_Bateria_Vermelho, LOW);
+      
+    }
     else{
       digitalWrite(LED_Temp_Bateria_Verde, HIGH);
       digitalWrite(LED_Temp_Bateria_Amarelo, LOW);
@@ -214,18 +241,37 @@ void loop()
     Serial.print("Temperatura_Controlador: ");
     while(Serial.read()<0) Temperatura_Controlador = Serial.parseInt();
     Serial.println(Temperatura_Controlador);
-    if(Temperatura_Controlador > 98){
-        digitalWrite(LED_Temp_Controlador_Amarelo, HIGH);
-        digitalWrite(LED_Temp_Controlador_Vermelho, LOW);
+    if(Temperatura_Controlador > 65){
+        digitalWrite(LED_Temp_Controlador_Amarelo, LOW);
+        digitalWrite(LED_Temp_Controlador_Vermelho, HIGH);
         digitalWrite(LED_Temp_Controlador_Verde, LOW);
      }
+     else if(Temperatura_Controlador < 65 && Temperatura_Controlador > 60){
+      digitalWrite(LED_Temp_Controlador_Verde, LOW);
+      digitalWrite(LED_Temp_Controlador_Amarelo, HIGH);
+      digitalWrite(LED_Temp_Controlador_Vermelho, LOW);
+      
+    }
     else{
       digitalWrite(LED_Temp_Controlador_Verde, HIGH);
       digitalWrite(LED_Temp_Controlador_Amarelo, LOW);
       digitalWrite(LED_Temp_Controlador_Vermelho, LOW);
       
     }   
-/***********************************************************************************************/
+
+/********************************VELOCIDADE*************************************/ 
+    
+    Serial.print("Velocidade: ");
+    while(Serial.read()<0) Velocidade = Serial.parseInt();
+    Serial.println(Velocidade);
+    F_Velocidade();
+    
+/********************************RPM*******************************************/ 
+    Serial.print("RPM: ");
+    while(Serial.read()<0) RPM = Serial.parseInt();
+    Serial.println(RPM);
+
+/******************************************************************************/
 
    Serial.println();
 }
